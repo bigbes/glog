@@ -19,19 +19,24 @@
 package glog
 
 import (
+	"sync"
+
 	"github.com/insolar/vanilla/throw"
 	"github.com/soverenio/log"
 	"github.com/soverenio/log/global"
 )
 
+var logWrapperOnce sync.Once
 var logWrapper log.Logger
 
-func init() {
-	logWrapper = global.Logger().Copy().
-		WithoutInheritedFields().
-		WithField("loginstance", "glog").
-		WithSkipFrameCount(1).
-		MustBuild()
+func logWrapperInit() {
+	logWrapperOnce.Do(func() {
+		logWrapper = global.Logger().Copy().
+			WithoutInheritedFields().
+			WithField("loginstance", "glog").
+			WithSkipFrameCount(1).
+			MustBuild()
+	})
 }
 
 func Flush() { global.Flush() }
@@ -41,28 +46,36 @@ func CopyStandardLogTo(name string) { panic(throw.NotImplemented()) }
 type Level int32
 type Verbose bool
 
-func V(level Level) Verbose                                { return true }
-func (v Verbose) Info(args ...interface{})                 { logWrapper.Info(args...) }
-func (v Verbose) Infoln(args ...interface{})               { logWrapper.Info(args...) }
-func (v Verbose) Infof(format string, args ...interface{}) { logWrapper.Infof(format, args...) }
+func V(level Level) Verbose                  { return true }
+func (v Verbose) Info(args ...interface{})   { logWrapperInit(); logWrapper.Info(args...) }
+func (v Verbose) Infoln(args ...interface{}) { logWrapperInit(); logWrapper.Info(args...) }
+func (v Verbose) Infof(format string, args ...interface{}) {
+	logWrapperInit()
+	logWrapper.Infof(format, args...)
+}
 
-func Info(args ...interface{})                    { logWrapper.Info(args...) }
-func Infoln(args ...interface{})                  { logWrapper.Info(args...) }
-func Infof(format string, args ...interface{})    { logWrapper.Infof(format, args...) }
-func Warning(args ...interface{})                 { logWrapper.Warn(args...) }
-func Warningln(args ...interface{})               { logWrapper.Warn(args...) }
-func Warningf(format string, args ...interface{}) { logWrapper.Warnf(format, args...) }
-func Error(args ...interface{})                   { logWrapper.Error(args...) }
-func Errorln(args ...interface{})                 { logWrapper.Error(args...) }
-func Errorf(format string, args ...interface{})   { logWrapper.Errorf(format, args...) }
-func Fatal(args ...interface{})                   { logWrapper.Fatal(args...) }
-func Fatalln(args ...interface{})                 { logWrapper.Fatal(args...) }
-func Fatalf(format string, args ...interface{})   { logWrapper.Fatalf(format, args...) }
-func Exit(args ...interface{})                    { logWrapper.Fatal(args...) }
-func Exitln(args ...interface{})                  { logWrapper.Fatal(args...) }
-func Exitf(format string, args ...interface{})    { logWrapper.Fatalf(format, args...) }
+func Info(args ...interface{})                 { logWrapperInit(); logWrapper.Info(args...) }
+func Infoln(args ...interface{})               { logWrapperInit(); logWrapper.Info(args...) }
+func Infof(format string, args ...interface{}) { logWrapperInit(); logWrapper.Infof(format, args...) }
+func Warning(args ...interface{})              { logWrapperInit(); logWrapper.Warn(args...) }
+func Warningln(args ...interface{})            { logWrapperInit(); logWrapper.Warn(args...) }
+func Warningf(format string, args ...interface{}) {
+	logWrapperInit()
+	logWrapper.Warnf(format, args...)
+}
+
+func Error(args ...interface{})                 { logWrapperInit(); logWrapper.Error(args...) }
+func Errorln(args ...interface{})               { logWrapperInit(); logWrapper.Error(args...) }
+func Errorf(format string, args ...interface{}) { logWrapperInit(); logWrapper.Errorf(format, args...) }
+func Fatal(args ...interface{})                 { logWrapperInit(); logWrapper.Fatal(args...) }
+func Fatalln(args ...interface{})               { logWrapperInit(); logWrapper.Fatal(args...) }
+func Fatalf(format string, args ...interface{}) { logWrapperInit(); logWrapper.Fatalf(format, args...) }
+func Exit(args ...interface{})                  { logWrapperInit(); logWrapper.Fatal(args...) }
+func Exitln(args ...interface{})                { logWrapperInit(); logWrapper.Fatal(args...) }
+func Exitf(format string, args ...interface{})  { logWrapperInit(); logWrapper.Fatalf(format, args...) }
 
 func InfoDepth(depth int, args ...interface{}) {
+	logWrapperInit()
 	localWrapper := logWrapper.Copy().
 		WithSkipFrameCount(1 + depth).
 		MustBuild()
@@ -70,6 +83,7 @@ func InfoDepth(depth int, args ...interface{}) {
 }
 
 func WarningDepth(depth int, args ...interface{}) {
+	logWrapperInit()
 	localWrapper := logWrapper.Copy().
 		WithSkipFrameCount(1 + depth).
 		MustBuild()
@@ -77,6 +91,7 @@ func WarningDepth(depth int, args ...interface{}) {
 }
 
 func ErrorDepth(depth int, args ...interface{}) {
+	logWrapperInit()
 	localWrapper := logWrapper.Copy().
 		WithSkipFrameCount(1 + depth).
 		MustBuild()
@@ -84,6 +99,7 @@ func ErrorDepth(depth int, args ...interface{}) {
 }
 
 func FatalDepth(depth int, args ...interface{}) {
+	logWrapperInit()
 	localWrapper := logWrapper.Copy().
 		WithSkipFrameCount(1 + depth).
 		MustBuild()
@@ -91,6 +107,7 @@ func FatalDepth(depth int, args ...interface{}) {
 }
 
 func ExitDepth(depth int, args ...interface{}) {
+	logWrapperInit()
 	localWrapper := logWrapper.Copy().
 		WithSkipFrameCount(1 + depth).
 		MustBuild()
